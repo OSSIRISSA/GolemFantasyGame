@@ -1,4 +1,6 @@
 .vs/
+x64/Debug/
+GolemFantasy/x64/Debug/
 
 # Prerequisites
 *.d

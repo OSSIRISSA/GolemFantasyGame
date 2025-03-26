@@ -1,3 +1,0 @@
-﻿  GolemFantasy.cpp
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-  GolemFantasy.vcxproj -> C:\Users\maxim\source\repos\GolemFantasy\x64\Debug\GolemFantasy.exe

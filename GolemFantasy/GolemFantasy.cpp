@@ -1,26 +1,8 @@
-﻿/*******************************************************************************************
-*
-*   raylib [core] example - 3d camera first person
-*
-*   Example complexity rating: [★★☆☆] 2/4
-*
-*   Example originally created with raylib 1.3, last time updated with raylib 1.3
-*
-*   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
-*   BSD-like license that allows static linking with closed source software
-*
-*   Copyright (c) 2015-2025 Ramon Santamaria (@raysan5)
-*
-********************************************************************************************/
-
-#include "raylib.h"
-#include "rcamera.h"
+﻿#include "raylib.h"
+#include "camera.h"
 
 #define MAX_COLUMNS 20
 
-//------------------------------------------------------------------------------------
-// Program main entry point
-//------------------------------------------------------------------------------------
 int main(void)
 {
     // Initialization
@@ -32,13 +14,17 @@ int main(void)
 
     // Define the camera to look into our 3d world (position, target, up vector)
     Camera camera = { 0 };
-    camera.position = Vector3{ 0.0f, 2.0f, 4.0f };    // Camera position
-    camera.target = Vector3{ 0.0f, 2.0f, 0.0f };      // Camera looking at point
-    camera.up = Vector3{ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
-    camera.fovy = 60.0f;                                // Camera field-of-view Y
-    camera.projection = CAMERA_PERSPECTIVE;            
-
-    int cameraMode = CAMERA_FIRST_PERSON;
+   
+    // Create isometric view
+    int cameraMode = CAMERA_THIRD_PERSON;
+    // Note: The target distance is related to the render distance in the orthographic projection
+    camera.position = Vector3{ 0.0f, 2.0f, -100.0f };
+    camera.target = Vector3{ 0.0f, 2.0f, 0.0f };
+    camera.up = Vector3{ 0.0f, 1.0f, 0.0f };
+    camera.projection = CAMERA_ORTHOGRAPHIC;
+    camera.fovy = 20.0f; // near plane width in CAMERA_ORTHOGRAPHIC
+    CameraYaw(&camera, -135 * DEG2RAD, true);
+    CameraPitch(&camera, -45 * DEG2RAD, true, true, false);
 
     // Generates some random columns
     float heights[MAX_COLUMNS] = { 0 };
@@ -87,34 +73,6 @@ int main(void)
             camera.up = Vector3{ 0.0f, 1.0f, 0.0f }; // Reset roll
         }
 
-        // Switch camera projection
-        if (IsKeyPressed(KEY_P))
-        {
-            if (camera.projection == CAMERA_PERSPECTIVE)
-            {
-                // Create isometric view
-                cameraMode = CAMERA_THIRD_PERSON;
-                // Note: The target distance is related to the render distance in the orthographic projection
-                camera.position = Vector3{ 0.0f, 2.0f, -100.0f };
-                camera.target = Vector3{ 0.0f, 2.0f, 0.0f };
-                camera.up = Vector3{ 0.0f, 1.0f, 0.0f };
-                camera.projection = CAMERA_ORTHOGRAPHIC;
-                camera.fovy = 20.0f; // near plane width in CAMERA_ORTHOGRAPHIC
-                CameraYaw(&camera, -135 * DEG2RAD, true);
-                CameraPitch(&camera, -45 * DEG2RAD, true, true, false);
-            }
-            else if (camera.projection == CAMERA_ORTHOGRAPHIC)
-            {
-                // Reset to default view
-                cameraMode = CAMERA_THIRD_PERSON;
-                camera.position = Vector3{ 0.0f, 2.0f, 10.0f };
-                camera.target = Vector3{ 0.0f, 2.0f, 0.0f };
-                camera.up = Vector3{ 0.0f, 1.0f, 0.0f };
-                camera.projection = CAMERA_PERSPECTIVE;
-                camera.fovy = 60.0f;
-            }
-        }
-
         // Update camera computes movement internally depending on the camera mode
         // Some default standard keyboard/mouse inputs are hardcoded to simplify use
         // For advanced camera controls, it's recommended to compute camera movement manually
@@ -125,14 +83,14 @@ int main(void)
                 // This new camera function allows custom movement/rotation values to be directly provided
                 // as input parameters, with this approach, rcamera module is internally independent of raylib inputs
                 UpdateCameraPro(&camera,
-                    (Vector3){
+                    Vector3{
                         (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))*0.1f -      // Move forward-backward
                         (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN))*0.1f,
                         (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT))*0.1f -   // Move right-left
                         (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT))*0.1f,
                         0.0f                                                // Move up-down
                     },
-                    (Vector3){
+                    Vector3{
                         GetMouseDelta().x*0.05f,                            // Rotation: yaw
                         GetMouseDelta().y*0.05f,                            // Rotation: pitch
                         0.0f                                                // Rotation: roll

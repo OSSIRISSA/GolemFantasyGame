@@ -1,9 +1,7 @@
-#ifndef GOLEM_CHARACTER_H
-#define GOLEM_CHARACTER_H
+#pragma once
 
 #include "CharacterBase.h"
 #include "GolemPart.h"
-#include <vector>
 
 class GolemCharacter : public CharacterBase {
 public:
@@ -28,5 +26,3 @@ private:
     float moveSpeed;
     bool moving;
 };
-
-#endif

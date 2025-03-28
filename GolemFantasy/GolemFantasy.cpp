@@ -6,8 +6,8 @@
 #include "GolemCharacter.h"
 
 int main() {
-    InitWindow(2560, 1600, "Turn-Based Click Move");
-    ToggleFullscreen();
+    InitWindow(2560, 1580, "Turn-Based Click Move");
+    //ToggleFullscreen();
     //SetTargetFPS(60);
 
     CameraController camController;
@@ -25,6 +25,8 @@ int main() {
         float delta = GetFrameTime();
         camController.Update(player.GetPosition());
 
+        
+
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             Vector3 groundNormal = Vector3{ 0.0f, 1.0f, 0.0f };
             Vector3 groundPoint = Vector3{ 0.0f, 0.0f, 0.0f };
@@ -41,9 +43,8 @@ int main() {
             if (collision.hit) {
                 player.SetDestination(collision.point);
             }
-        }
+        } else player.Update(delta);
 
-        player.Update(delta);
         golem.Update(delta);
 
         if (IsKeyPressed(KEY_Q)) {

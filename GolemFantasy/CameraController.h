@@ -1,5 +1,4 @@
-#ifndef CAMERA_CONTROLLER_H
-#define CAMERA_CONTROLLER_H
+#pragma once
 
 #include "raylib.h"
 
@@ -18,5 +17,3 @@ private:
 
     Camera3D camera;
 };
-
-#endif // CAMERA_CONTROLLER_H

@@ -1,9 +1,6 @@
-#ifndef CHARACTER_BASE_H
-#define CHARACTER_BASE_H
+#pragma once
 
 #include "raylib.h"
-#include <memory>
-#include <vector>
 
 class CharacterBase {
 public:
@@ -19,5 +16,3 @@ protected:
     Model model;
     Vector3 position;
 };
-
-#endif

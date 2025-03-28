@@ -1,5 +1,4 @@
-#ifndef PLAYER_CHARACTER_H
-#define PLAYER_CHARACTER_H
+#pragma once
 
 #include "raylib.h"
 #include "MagicAbility.h"
@@ -30,5 +29,3 @@ private:
 
     std::vector<MagicAbility> abilities;
 };
-
-#endif

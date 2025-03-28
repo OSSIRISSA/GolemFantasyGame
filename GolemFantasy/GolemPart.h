@@ -1,5 +1,4 @@
-#ifndef GOLEM_PART_H
-#define GOLEM_PART_H
+#pragma once
 
 #include "raylib.h"
 #include <string>
@@ -18,12 +17,9 @@ struct GolemPart {
     float healthBonus;
     float strengthBonus;
     float speedBonus;
-
     Color color;
 
     GolemPart(std::string n, MaterialType m, float hp, float str, float spd, Color c)
         : name(n), material(m), healthBonus(hp), strengthBonus(str), speedBonus(spd), color(c) {
     }
 };
-
-#endif

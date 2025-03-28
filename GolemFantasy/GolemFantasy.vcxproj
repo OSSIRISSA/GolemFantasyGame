@@ -129,13 +129,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CameraController.cpp" />
+    <ClCompile Include="GolemCharacter.cpp" />
+    <ClCompile Include="PlayerCharacter.cpp" />
+    <ClCompile Include="CharacterBase.cpp" />
     <ClCompile Include="GolemFantasy.cpp" />
+    <ClCompile Include="MagicAbility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="camera.h" />
+    <ClInclude Include="CameraController.h" />
+    <ClInclude Include="GolemCharacter.h" />
+    <ClInclude Include="GolemPart.h" />
+    <ClInclude Include="PlayerCharacter.h" />
+    <ClInclude Include="CharacterBase.h" />
+    <ClInclude Include="MagicAbility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -106,6 +106,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -131,6 +132,8 @@
   <ItemGroup>
     <ClCompile Include="CameraController.cpp" />
     <ClCompile Include="GolemCharacter.cpp" />
+    <ClCompile Include="MeshSlicer.cpp" />
+    <ClCompile Include="MeshSlicer.h" />
     <ClCompile Include="PlayerCharacter.cpp" />
     <ClCompile Include="CharacterBase.cpp" />
     <ClCompile Include="GolemFantasy.cpp" />

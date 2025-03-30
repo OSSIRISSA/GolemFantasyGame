@@ -6,32 +6,14 @@ GolemCharacter::GolemCharacter(Vector3 pos, GolemPart head, GolemPart torso, Gol
     headPart(head),
     torsoPart(torso),
     armPart(arms),
-    legPart(legs),
-    destination(pos),
-    moveSpeed(5.0f),
-    moving(false)
+    legPart(legs)
 {
+    // Movement is already initialized in CharacterBase
 }
 
 void GolemCharacter::Update(float delta) {
-    if (!moving) return;
-
-    Vector3 toTarget = Vector3Subtract(destination, position);
-    float distance = Vector3Length(toTarget);
-
-    if (distance < 0.05f) {
-        moving = false;
-        return;
-    }
-
-    Vector3 direction = Vector3Normalize(toTarget);
-    position = Vector3Add(position, Vector3Scale(direction, moveSpeed * delta));
-}
-
-void GolemCharacter::SetDestination(Vector3 dest) {
-    destination = dest;
-    destination.y = position.y;
-    moving = true;
+    CharacterBase::Update(delta);
+    // Additional golem-specific logic can go here
 }
 
 void GolemCharacter::Draw() const {

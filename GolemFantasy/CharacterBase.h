@@ -7,12 +7,17 @@ public:
     CharacterBase(Vector3 startPos);
     virtual ~CharacterBase();
 
-    virtual void Update(float delta) = 0;
-    virtual void Draw() const = 0;
+    virtual void Update(float delta);
+    virtual void Draw() const;
 
     Vector3 GetPosition() const;
+    void SetDestination(Vector3 dest);
 
 protected:
-    Model model;
     Vector3 position;
+    Model model;
+
+    Vector3 destination;
+    float moveSpeed;
+    bool moving;
 };

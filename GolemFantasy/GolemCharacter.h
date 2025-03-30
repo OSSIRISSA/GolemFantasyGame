@@ -7,10 +7,8 @@ class GolemCharacter : public CharacterBase {
 public:
     GolemCharacter(Vector3 pos, GolemPart head, GolemPart torso, GolemPart arms, GolemPart legs);
 
-    void Update(float delta);
+    void Update(float delta) override;
     void Draw() const override;
-
-    void SetDestination(Vector3 dest);
 
     float GetTotalHealth() const;
     float GetTotalStrength() const;
@@ -21,8 +19,4 @@ private:
     GolemPart torsoPart;
     GolemPart armPart;
     GolemPart legPart;
-
-    Vector3 destination;
-    float moveSpeed;
-    bool moving;
 };

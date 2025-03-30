@@ -33,6 +33,12 @@
     <ClCompile Include="GolemCharacter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MeshSlicer.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshSlicer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -8,20 +8,27 @@
 
 void DrawMeshWireframe(Mesh mesh, Vector3 position, float scale, Color color) {
     Vector3* vertices = (Vector3*)mesh.vertices;
-    unsigned short* indices = (unsigned short*)mesh.indices;
+
+    int i0, i1, i2;
 
     for (int i = 0; i < mesh.triangleCount; i++) {
-        int index0 = indices[i * 3 + 0];
-        int index1 = indices[i * 3 + 1];
-        int index2 = indices[i * 3 + 2];
-
-        Vector3 v0 = Vector3Add(Vector3Scale(vertices[index0], scale), position);
-        Vector3 v1 = Vector3Add(Vector3Scale(vertices[index1], scale), position);
-        Vector3 v2 = Vector3Add(Vector3Scale(vertices[index2], scale), position);
+        if (!mesh.indices) {
+            i0 = i * 3 + 0;
+            i1 = i * 3 + 1;
+            i2 = i * 3 + 2;
+        }
+        else {
+            i0 = mesh.indices[i * 3 + 0];
+            i1 = mesh.indices[i * 3 + 1];
+            i2 = mesh.indices[i * 3 + 2];
+        }
+        Vector3 v0 = Vector3Add(Vector3Scale(vertices[i0], scale), position);
+        Vector3 v1 = Vector3Add(Vector3Scale(vertices[i1], scale), position);
+        Vector3 v2 = Vector3Add(Vector3Scale(vertices[i2], scale), position);
 
         DrawLine3D(v0, v1, color);
         DrawLine3D(v1, v2, color);
-        DrawLine3D(v2, v0, color);
+        DrawLine3D(v2, v0, color);        
     }
 }
 
@@ -78,10 +85,9 @@ int main() {
         }
 
         if (IsKeyPressed(KEY_SPACE) && !sliced) {
-            Mesh originalMesh = GenMeshCylinder(2, 5, 10);
-            UploadMesh(&originalMesh, true);
-            Vector3 planePoint = Vector3{ 0.0f, 0.5f, 0.0f };
-            Vector3 planeNormal = Vector3{ 0.1f, 0.5f, 0.1f };
+            Mesh originalMesh = GenMeshCone(1, 4, 5);
+            Vector3 planePoint = Vector3{ 0.0f, 0.0f, 0.3f };
+            Vector3 planeNormal = Vector3{ 0.1f, 0.0f, 1.0f };
 
             auto [topMesh, bottomMesh] = SliceMeshByPlane(originalMesh, planePoint, planeNormal);
 
@@ -113,8 +119,8 @@ int main() {
             DrawModel(bottomModel, posBottom, 1.0f, BLUE);
             DrawMeshWireframe(bottomModel.meshes[0], posBottom, 1.0f, BLACK);
 
-            //DrawModel(originalModel, posOriginal, 1.0f, GREEN);
-            //DrawMeshWireframe(originalModel.meshes[0], posOriginal, 1.0f, BLACK);
+            DrawModel(originalModel, posOriginal, 1.0f, GREEN);
+            DrawMeshWireframe(originalModel.meshes[0], posOriginal, 1.0f, BLACK);
         }
 
         EndMode3D();

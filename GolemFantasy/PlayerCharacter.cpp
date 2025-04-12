@@ -2,31 +2,57 @@
 #include "raymath.h"
 
 PlayerCharacter::PlayerCharacter(Vector3 startPos)
-    : CharacterBase(startPos)
+    : CharacterBase(startPos),
+    cameraController()
 {
-    // Model is already generated in CharacterBase
+    DisableCursor();
 }
 
 PlayerCharacter::~PlayerCharacter() {}
 
 void PlayerCharacter::Update(float delta) {
-    CharacterBase::Update(delta);  // Movement
-    UpdateAbilities(delta);        // Custom logic
+    CharacterBase::Update(delta);
+
+    // --- Update CameraController to follow the player ---
+    cameraController.Update(m_position);
+
+    Vector3 forward = cameraController.GetForward();
+    forward.y = 0;
+    Vector3 right = Vector3Normalize(Vector3CrossProduct(forward, cameraController.GetUp()));
+
+    Vector3 move = { 0 };
+    if (IsKeyDown(KEY_W)) move = Vector3Add(move, forward);
+    if (IsKeyDown(KEY_S)) move = Vector3Subtract(move, forward);
+    if (IsKeyDown(KEY_D)) move = Vector3Add(move, right);
+    if (IsKeyDown(KEY_A)) move = Vector3Subtract(move, right);
+
+    if (Vector3Length(move) > 0.0f) {
+        move = Vector3Normalize(move);
+        m_position = Vector3Add(m_position, Vector3Scale(move, moveSpeed * delta));
+    }
+
+    // --- Abilities ---
+    if (IsKeyPressed(KEY_Q)) {
+        Vector3 forward = GetCamera().target - GetCamera().position;
+        forward.y = 0.0f;
+        forward = Vector3Normalize(forward);
+        CastAbility(forward);
+    }
+
+    UpdateAbilities(delta);
 }
 
 void PlayerCharacter::Draw() const {
-    DrawModel(model, position, 1.0f, MAROON);
+    DrawModel(model, m_position, 1.0f, MAROON);
 
     Vector3 size{ 1.0f, 2.0f, 1.0f };
-    DrawCubeWires(position, size.x, size.y, size.z, BLACK);
-
-    DrawCircle3D(Vector3{ position.x, 0.01f, position.z }, 0.6f, Vector3{ 1.0f, 0.0f, 0.0f }, 90.0f, Fade(BLACK, 0.3f));
+    DrawCubeWires(m_position, size.x, size.y, size.z, BLACK);
 
     DrawAbilities();
 }
 
 void PlayerCharacter::CastAbility(Vector3 forward) {
-    Vector3 spawnPos = position;
+    Vector3 spawnPos = m_position;
     spawnPos.y += 1.0f;
     abilities.emplace_back(spawnPos, forward);
 }
@@ -44,4 +70,8 @@ void PlayerCharacter::DrawAbilities() const {
     for (const auto& ability : abilities) {
         ability.Draw();
     }
+}
+
+Camera PlayerCharacter::GetCamera() const {
+    return cameraController.GetCamera();
 }

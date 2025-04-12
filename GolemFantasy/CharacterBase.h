@@ -1,23 +1,16 @@
 #pragma once
-
 #include "raylib.h"
+#include "Node.h"
 
-class CharacterBase {
+class CharacterBase : public Node {
 public:
     CharacterBase(Vector3 startPos);
     virtual ~CharacterBase();
 
-    virtual void Update(float delta);
-    virtual void Draw() const;
-
-    Vector3 GetPosition() const;
-    void SetDestination(Vector3 dest);
+    virtual void Update(float delta) override;
+    virtual void Draw() const override;
 
 protected:
-    Vector3 position;
     Model model;
-
-    Vector3 destination;
     float moveSpeed;
-    bool moving;
 };

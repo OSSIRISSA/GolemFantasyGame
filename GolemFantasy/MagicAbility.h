@@ -1,6 +1,4 @@
-#ifndef MAGIC_ABILITY_H
-#define MAGIC_ABILITY_H
-
+#pragma once
 #include "raylib.h"
 
 class MagicAbility {
@@ -17,5 +15,3 @@ private:
     float timer;
     float lifespan;
 };
-
-#endif

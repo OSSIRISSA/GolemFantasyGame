@@ -1,83 +1,98 @@
-﻿#include "MeshSlicer.h"
+#include "raylib.h"
 #include "raymath.h"
 #include <vector>
-#include <utility>
 #include <cmath>
+#include <algorithm>
 
+// Distance between point and plain
 bool static PointPlaneDistance(Vector3 point, Vector3 planePoint, Vector3 planeNormal) {
     return Vector3DotProduct(Vector3Subtract(point, planePoint), planeNormal) >= 0;
 }
 
+// Point at which there is an intersection
 Vector3 static IntersectPlane(Vector3 a, Vector3 b, Vector3 planePoint, Vector3 planeNormal) {
     Vector3 ab = Vector3Subtract(b, a);
-    float t = Vector3DotProduct(Vector3Subtract(planePoint, a), planeNormal) / Vector3DotProduct(ab, planeNormal);
-    return Vector3Add(a, Vector3Scale(ab, t));
+    return Vector3Add(a, Vector3Scale(ab, Vector3DotProduct(Vector3Subtract(planePoint, a), planeNormal) / Vector3DotProduct(ab, planeNormal)));
 }
 
+// Adds triangle to a verticies vector
 void static AddTriangle(std::vector<Vector3>& verts, Vector3 a, Vector3 b, Vector3 c) {
     verts.push_back(a);
     verts.push_back(b);
     verts.push_back(c);
 }
 
-Vector3 ComputeCentroid(const std::vector<Vector3>& points) {
-    Vector3 centroid = { 0 };
+// Projects and orders intersection points in a loop around center
+std::vector<Vector3> OrderIntersectionPoints(const std::vector<Vector3>& points, Vector3 planeNormal) {
+    if (points.empty()) return {};
+
+    // Generate two perpendicular vectors on the plane
+    Vector3 planeRight = Vector3Normalize(Vector3CrossProduct(planeNormal, Vector3{ 0, 1, 0 }));
+    if (Vector3Length(planeRight) < 0.01f) planeRight = Vector3Normalize(Vector3CrossProduct(planeNormal, Vector3{ 1, 0, 0 }));
+    Vector3 planeUp = Vector3Normalize(Vector3CrossProduct(planeRight, planeNormal));
+
+    // Calculate center
+    Vector3 center = { 0 };
+    for (auto& p : points) center = Vector3Add(center, p);
+    center = Vector3Scale(center, 1.0f / points.size());
+
+    // Sort by angle around center
+    std::vector<std::pair<float, Vector3>> sortedPoints;
     for (auto& p : points) {
-        centroid = Vector3Add(centroid, p);
+        Vector3 local = Vector3Subtract(p, center);
+        float x = Vector3DotProduct(local, planeRight);
+        float y = Vector3DotProduct(local, planeUp);
+        float angle = atan2f(y, x);
+        sortedPoints.push_back({ angle, p });
     }
-    return Vector3Scale(centroid, 1.0f / points.size());
+
+    std::sort(sortedPoints.begin(), sortedPoints.end(), [](auto& a, auto& b) {
+        return a.first < b.first;
+        });
+
+    // Extract ordered points
+    std::vector<Vector3> ordered;
+    for (auto& p : sortedPoints) ordered.push_back(p.second);
+    return ordered;
 }
 
-void BuildCap(std::vector<Vector3>& capVerts, const std::vector<std::pair<Vector3, Vector3>>& edges, Vector3 planeNormal, bool flipWinding) {
-    // Build a connected loop from edge segments
-    std::vector<Vector3> loop;
-    if (edges.empty()) return;
+// Triangulates a fan to fill the cap
+void TriangulateCap(const std::vector<Vector3>& orderedPoints, Vector3 planeNormal, std::vector<Vector3>& aboveVerts, std::vector<Vector3>& belowVerts) {
+    if (orderedPoints.size() < 3) return;
 
-    std::vector<std::pair<Vector3, Vector3>> edgesCopy = edges;
-    loop.push_back(edgesCopy[0].first);
-    Vector3 current = edgesCopy[0].second;
-    edgesCopy.erase(edgesCopy.begin());
+    // Calculate center again
+    Vector3 center = { 0 };
+    for (auto& p : orderedPoints) center = Vector3Add(center, p);
+    center = Vector3Scale(center, 1.0f / orderedPoints.size());
 
-    while (!edgesCopy.empty()) {
-        for (auto it = edgesCopy.begin(); it != edgesCopy.end(); ++it) {
-            if (Vector3Distance(it->first, current) < 0.0001f) {
-                loop.push_back(it->first);
-                current = it->second;
-                edgesCopy.erase(it);
-                break;
-            }
-            else if (Vector3Distance(it->second, current) < 0.0001f) {
-                loop.push_back(it->second);
-                current = it->first;
-                edgesCopy.erase(it);
-                break;
-            }
-        }
-    }
+    for (int i = 0; i < orderedPoints.size(); i++) {
+        Vector3 p0 = orderedPoints[i];
+        Vector3 p1 = orderedPoints[(i + 1) % orderedPoints.size()];
 
-    Vector3 center = ComputeCentroid(loop);
+        // Above side (normal order)
+        AddTriangle(aboveVerts, center, p0, p1);
 
-    // Make sure winding order is consistent with normal
-    for (size_t i = 0; i < loop.size(); ++i) {
-        Vector3 v0 = loop[i];
-        Vector3 v1 = loop[(i + 1) % loop.size()];
-        if (flipWinding)
-            AddTriangle(capVerts, center, v1, v0);
-        else
-            AddTriangle(capVerts, center, v0, v1);
+        // Below side (reverse winding for flipped normal)
+        AddTriangle(belowVerts, center, p1, p0);
     }
 }
+
 
 std::pair<Mesh, Mesh> SliceMeshByPlane(const Mesh& mesh, Vector3 planePoint, Vector3 planeNormal) {
 
     SetTraceLogLevel(LOG_ALL);
     std::vector<Vector3> aboveVerts;
     std::vector<Vector3> belowVerts;
-    std::vector<std::pair<Vector3, Vector3>> intersectionEdges;
 
     float* verts = (float*)mesh.vertices;
 
+    std::vector<Vector3> intersectionPoints;
+
+    int count = 0;
+
     for (int i = 0; i < mesh.triangleCount; i++) {
+        TraceLog(LOG_INFO, "----- Triangle %d -----", i);
+
         Vector3 firstVert, secondVert, thirdVert;
 
         if (!mesh.indices) {
@@ -103,69 +118,88 @@ std::pair<Mesh, Mesh> SliceMeshByPlane(const Mesh& mesh, Vector3 planePoint, Vec
         bool posSecond = PointPlaneDistance(secondVert, planePoint, planeNormal);
         bool posThird = PointPlaneDistance(thirdVert, planePoint, planeNormal);
 
+        TraceLog(LOG_INFO, "v[0]: (%.2f, %.2f, %.2f) -> dist: %d", firstVert.x, firstVert.y, firstVert.z, posFirst);
+        TraceLog(LOG_INFO, "v[1]: (%.2f, %.2f, %.2f) -> dist: %d", secondVert.x, secondVert.y, secondVert.z, posSecond);
+        TraceLog(LOG_INFO, "v[2]: (%.2f, %.2f, %.2f) -> dist: %d", thirdVert.x, thirdVert.y, thirdVert.z, posThird);
+
+
+
         if (!((posFirst == posSecond) && (posSecond == posThird))) {
             if (posFirst == posSecond) {
-                Vector3 i1 = IntersectPlane(thirdVert, firstVert, planePoint, planeNormal);
-                Vector3 i2 = IntersectPlane(thirdVert, secondVert, planePoint, planeNormal);
-                intersectionEdges.push_back({ i1, i2 });
-
+                TraceLog(LOG_INFO, "Third");
+                Vector3 intersectSecond = IntersectPlane(thirdVert, secondVert, planePoint, planeNormal);
+                Vector3 intersectFirst = IntersectPlane(thirdVert, firstVert, planePoint, planeNormal);
+                if (intersectSecond != intersectFirst) intersectionPoints.push_back(intersectFirst);
+                TraceLog(LOG_INFO, "Point %d: %.2f %.2f %.2f", count++, intersectSecond.x, intersectSecond.y, intersectSecond.z);
+                TraceLog(LOG_INFO, "Point %d: %.2f %.2f %.2f", count++, intersectFirst.x, intersectFirst.y, intersectFirst.z);
                 if (posThird) {
-                    AddTriangle(aboveVerts, i2, thirdVert, i1);
-                    AddTriangle(belowVerts, i1, firstVert, secondVert);
-                    AddTriangle(belowVerts, i1, secondVert, i2);
+                    AddTriangle(aboveVerts, intersectSecond, thirdVert, intersectFirst);
+                    AddTriangle(belowVerts, intersectFirst, firstVert, secondVert);
+                    AddTriangle(belowVerts, intersectFirst, secondVert, intersectSecond);
                 }
                 else {
-                    AddTriangle(belowVerts, thirdVert, i1, i2);
-                    AddTriangle(aboveVerts, i1, firstVert, secondVert);
-                    AddTriangle(aboveVerts, i1, secondVert, i2);
+                    AddTriangle(belowVerts, thirdVert, intersectFirst, intersectSecond);
+                    AddTriangle(aboveVerts, intersectFirst, firstVert, secondVert);
+                    AddTriangle(aboveVerts, intersectFirst, secondVert, intersectSecond);
                 }
             }
             else if (posFirst == posThird) {
-                Vector3 i1 = IntersectPlane(secondVert, firstVert, planePoint, planeNormal);
-                Vector3 i2 = IntersectPlane(secondVert, thirdVert, planePoint, planeNormal);
-                intersectionEdges.push_back({ i1, i2 });
-
+                TraceLog(LOG_INFO, "Second");
+                Vector3 intersectFirst = IntersectPlane(secondVert, firstVert, planePoint, planeNormal);
+                Vector3 intersectThird = IntersectPlane(secondVert, thirdVert, planePoint, planeNormal);
+                if (intersectThird != intersectFirst) intersectionPoints.push_back(intersectThird);
+                TraceLog(LOG_INFO, "Point %d: %.2f %.2f %.2f", count++, intersectFirst.x, intersectFirst.y, intersectFirst.z);
+                TraceLog(LOG_INFO, "Point %d: %.2f %.2f %.2f", count++, intersectThird.x, intersectThird.y, intersectThird.z);
                 if (posSecond) {
-                    AddTriangle(aboveVerts, i1, secondVert, i2);
-                    AddTriangle(belowVerts, i1, thirdVert, firstVert);
-                    AddTriangle(belowVerts, i1, i2, thirdVert);
+                    AddTriangle(aboveVerts, intersectFirst, secondVert, intersectThird);
+                    AddTriangle(belowVerts, intersectFirst, thirdVert, firstVert);
+                    AddTriangle(belowVerts, intersectFirst, intersectThird, thirdVert);
                 }
                 else {
-                    AddTriangle(belowVerts, i1, secondVert, i2);
-                    AddTriangle(aboveVerts, firstVert, i1, thirdVert);
-                    AddTriangle(aboveVerts, i1, i2, thirdVert);
+                    AddTriangle(belowVerts, intersectFirst, secondVert, intersectThird);
+                    AddTriangle(aboveVerts, firstVert, intersectFirst, thirdVert);
+                    AddTriangle(aboveVerts, intersectFirst, intersectThird, thirdVert);
                 }
             }
             else {
-                Vector3 i1 = IntersectPlane(firstVert, thirdVert, planePoint, planeNormal);
-                Vector3 i2 = IntersectPlane(firstVert, secondVert, planePoint, planeNormal);
-                intersectionEdges.push_back({ i1, i2 });
-
+                TraceLog(LOG_INFO, "First");
+                Vector3 intersectThird = IntersectPlane(firstVert, thirdVert, planePoint, planeNormal);
+                Vector3 intersectSecond = IntersectPlane(firstVert, secondVert, planePoint, planeNormal);
+                if (intersectThird != intersectSecond) intersectionPoints.push_back(intersectThird);
+                TraceLog(LOG_INFO, "Point %d: %.2f %.2f %.2f", count++, intersectSecond.x, intersectSecond.y, intersectSecond.z);
+                TraceLog(LOG_INFO, "Point %d: %.2f %.2f %.2f", count++, intersectThird.x, intersectThird.y, intersectThird.z);
                 if (posFirst) {
-                    AddTriangle(aboveVerts, i1, firstVert, i2);
-                    AddTriangle(belowVerts, i1, secondVert, thirdVert);
-                    AddTriangle(belowVerts, secondVert, i1, i2);
+                    AddTriangle(aboveVerts, intersectThird, firstVert, intersectSecond);
+                    AddTriangle(belowVerts, intersectThird, secondVert, thirdVert);
+                    AddTriangle(belowVerts, secondVert, intersectThird, intersectSecond);
                 }
                 else {
-                    AddTriangle(belowVerts, i1, firstVert, i2);
-                    AddTriangle(aboveVerts, thirdVert, i1, i2);
-                    AddTriangle(aboveVerts, thirdVert, i2, secondVert);
+                    AddTriangle(belowVerts, intersectThird, firstVert, intersectSecond);
+                    AddTriangle(aboveVerts, thirdVert, intersectThird, intersectSecond);
+                    AddTriangle(aboveVerts, thirdVert, intersectSecond, secondVert);
                 }
             }
         }
         else if (posFirst) {
             AddTriangle(aboveVerts, firstVert, secondVert, thirdVert);
+            TraceLog(LOG_INFO, "Everything Above");
         }
         else {
             AddTriangle(belowVerts, firstVert, secondVert, thirdVert);
+            TraceLog(LOG_INFO, "Everything Below");
         }
     }
 
-    // Build caps for both sides
-    BuildCap(aboveVerts, intersectionEdges, planeNormal, false);        // Top cap
-    BuildCap(belowVerts, intersectionEdges, Vector3Negate(planeNormal), true); // Bottom cap
+    // Fill the cap
+    if (!intersectionPoints.empty()) {
+        TriangulateCap(OrderIntersectionPoints(intersectionPoints, planeNormal), planeNormal, aboveVerts, belowVerts);
+        for (Vector3 i : intersectionPoints)
+        {
+            TraceLog(LOG_WARNING, "Points: %.2f %.2f %.2f", i.x, i.y, i.z);
+        }
+    }
 
-    // Mesh creation helper
+    // Create meshes from verticies vectors
     auto CreateMeshFromVerts = [](const std::vector<Vector3>& verts) -> Mesh {
         Mesh m = { 0 };
         m.vertexCount = verts.size();

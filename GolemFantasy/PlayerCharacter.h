@@ -2,6 +2,7 @@
 
 #include "raylib.h"
 #include "CharacterBase.h"
+#include "CameraController.h" 
 #include "MagicAbility.h"
 #include <vector>
 
@@ -17,10 +18,9 @@ public:
     void UpdateAbilities(float delta);
     void DrawAbilities() const;
 
-private:
-    Vector3 destination;
-    float moveSpeed;
-    bool moving;
+    Camera GetCamera() const;
 
+private:
+    CameraController cameraController;
     std::vector<MagicAbility> abilities;
 };

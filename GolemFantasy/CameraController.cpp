@@ -3,47 +3,43 @@
 #include <cmath>
 
 CameraController::CameraController() {
-    distance = 10.0f;
-    height = 4.0f;
     yaw = 0.0f;
-    pitch = 30.0f;
+    pitch = 0.0f;
 
-    minZoom = 5.0f;
-    maxZoom = 30.0f;
-
+    camera.position = Vector3{ 0.0f, 1.8f, 0.0f };
+    camera.target = Vector3Add(camera.position, Vector3{ 0.0f, 0.0f, 1.0f });
     camera.up = Vector3{ 0.0f, 1.0f, 0.0f };
-    camera.fovy = 45.0f;
+    camera.fovy = 60.0f;
     camera.projection = CAMERA_PERSPECTIVE;
+
+    forward = { 0.0f, 0.0f, 1.0f };
+    up = { 0.0f, 1.0f, 0.0f };
 }
 
-void CameraController::Update(Vector3 target) {
-    if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON)) {
-        Vector2 mouseDelta = GetMouseDelta();
-        float sensitivity = 0.2f;
-        yaw -= mouseDelta.x * sensitivity;
-    }
+void CameraController::Update(Vector3 playerPos) {
+    Vector2 mouseDelta = GetMouseDelta();
+    float sensitivity = 0.1f;
 
-    distance -= GetMouseWheelMove() * 2.0f;
-    distance = Clamp(distance, minZoom, maxZoom);
+    yaw -= mouseDelta.x * sensitivity;
+    pitch -= mouseDelta.y * sensitivity;
+
+    if (pitch > 89.0f) pitch = 89.0f;
+    if (pitch < -89.0f) pitch = -89.0f;
 
     float yawRad = DEG2RAD * yaw;
     float pitchRad = DEG2RAD * pitch;
 
-    Vector3 offset{
-        distance * sinf(yawRad) * cosf(pitchRad),
-        distance * sinf(pitchRad) + height,
-        distance * cosf(yawRad) * cosf(pitchRad)
-    };
+    forward.x = cosf(pitchRad) * sinf(yawRad);
+    forward.y = sinf(pitchRad);
+    forward.z = cosf(pitchRad) * cosf(yawRad);
+    forward = Vector3Normalize(forward);
 
-    camera.position = Vector3Add(target, offset);
-    camera.target = target;
+    camera.position = Vector3Add(playerPos, Vector3{ 0.0f, 1.5f, 0.0f });
+    camera.target = Vector3Add(camera.position, forward);
 }
 
-Camera3D CameraController::GetCamera() const {
-    return camera;
-}
+Camera3D CameraController::GetCamera() const { return camera; }
 
-void CameraController::SetZoomLimits(float minZ, float maxZ) {
-    minZoom = minZ;
-    maxZoom = maxZ;
-}
+Vector3 CameraController::GetForward() const { return forward; }
+
+Vector3 CameraController::GetUp() const { return up; }

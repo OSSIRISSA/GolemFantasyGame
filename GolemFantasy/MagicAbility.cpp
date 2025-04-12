@@ -1,3 +1,4 @@
+#pragma once
 #include "MagicAbility.h"
 #include "raymath.h"
 

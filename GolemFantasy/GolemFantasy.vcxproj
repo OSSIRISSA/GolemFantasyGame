@@ -134,6 +134,7 @@
     <ClCompile Include="GolemCharacter.cpp" />
     <ClCompile Include="MeshSlicer.cpp" />
     <ClCompile Include="MeshSlicer.h" />
+    <ClCompile Include="Node.cpp" />
     <ClCompile Include="PlayerCharacter.cpp" />
     <ClCompile Include="CharacterBase.cpp" />
     <ClCompile Include="GolemFantasy.cpp" />
@@ -146,9 +147,11 @@
     <ClInclude Include="CameraController.h" />
     <ClInclude Include="GolemCharacter.h" />
     <ClInclude Include="GolemPart.h" />
+    <ClInclude Include="Node.h" />
     <ClInclude Include="PlayerCharacter.h" />
     <ClInclude Include="CharacterBase.h" />
     <ClInclude Include="MagicAbility.h" />
+    <ClInclude Include="TriangleUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

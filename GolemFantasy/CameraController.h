@@ -1,5 +1,4 @@
 #pragma once
-
 #include "raylib.h"
 
 class CameraController {
@@ -8,12 +7,14 @@ public:
     void Update(Vector3 target);
     Camera3D GetCamera() const;
 
-    void SetZoomLimits(float minZoom, float maxZoom);
+    Vector3 GetForward() const;   
+    Vector3 GetUp() const;        
 
 private:
-    float distance, height;
     float yaw, pitch;
-    float minZoom, maxZoom;
 
     Camera3D camera;
+
+    Vector3 forward; 
+    Vector3 up;      
 };

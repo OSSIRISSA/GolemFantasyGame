@@ -1,46 +1,105 @@
 #pragma once
 #include "Node.h"
+#include "raymath.h"
+#include "raylib.h"
 
 Node::Node(const std::string& name)
-	: m_name(name), m_position({ 0.0f, 0.0f, 0.0f }), m_rotation(Quaternion()), m_scale({ 1.0f, 1.0f, 1.0f }) {
+	: name(name), position({ 0.0f, 0.0f, 0.0f }), rotation(Quaternion()), scale({ 1.0f, 1.0f, 1.0f }) {
 }
 
 Node::~Node() {
-	m_children.clear();
+	children.clear();
 }
 
 void Node::AddChild(std::shared_ptr<Node> child) {
-	if (child != nullptr) { m_children.push_back(child); }
+	if (child != nullptr) { 
+		//child->parent = std::make_shared<Node>(this);
+		children.push_back(child); 
+	}
 }
 
 bool Node::RemoveChild(const std::string& name) {
-	for (auto it = m_children.begin(); it != m_children.end(); ++it) {
-		if ((*it)->m_name == name) {
-			m_children.erase(it);
+	for (auto it = children.begin(); it != children.end(); ++it) {
+		if ((*it)->name == name) {
+			//(*it)->parent = nullptr;
+			children.erase(it);
 			return true;
 		}
 	}
 	return false;
 }
 
+const std::vector<std::shared_ptr<Node>>& Node::GetChildren() const { return children; }
+//const std::shared_ptr<Node>& Node::GetParent() const { return parent; }
+
 void Node::Update(float deltaTime) {
-	for (auto& child : m_children) { child->Update(deltaTime); }
+	for (auto& child : children) { child->Update(deltaTime); }
 }
 
 void Node::Draw() const {
-	for (auto& child : m_children) { child->Draw(); }
+	for (auto& child : children) { child->Draw(); }
 }
 
-void Node::SetPosition(Vector3 position) { m_position = position; }
 
-Vector3 Node::GetPosition() const { return m_position; }
+// --- POSITION ACTIONS --- 
+void Node::SetPosition(Vector3 newWorldPosition) { 
+	Vector3 delta = newWorldPosition - position;
+	for (auto& child : children) {
+		child->Move(delta);
+	}
+	position = newWorldPosition;
+}
 
-void Node::SetRotation(Quaternion rotation) { m_rotation = rotation; }
+void Node::Move(Vector3 addPosition) {
+	for (auto& child : children) {
+		child->Move(addPosition);
+	}
+	position += addPosition;
+}
 
-Quaternion Node::GetRotation() const { return m_rotation; }
+Vector3 Node::GetPosition() const { return position; }
 
-void Node::SetScale(Vector3 scale) { m_scale = scale; }
 
-Vector3 Node::GetScale() const { return m_scale; }
+// --- ROTATION ACTIONS --- 
+void Node::SetRotation(Quaternion newWorldRotation) {
+	Quaternion delta = newWorldRotation - rotation;
+	for (auto& child : children) {
+		child->Rotate(delta);
+	}
+	rotation = newWorldRotation;
+}
 
-const std::vector<std::shared_ptr<Node>>& Node::GetChildren() const { return m_children; }
+void Node::Rotate(Quaternion addRotation) {
+	for (auto& child : children) {
+		child->Rotate(addRotation);
+	}
+	rotation += addRotation;
+}
+
+Quaternion Node::GetRotation() const { return rotation; }
+
+
+// --- SCALE ACTIONS ---
+void Node::SetScale(Vector3 newWorldScale) {
+	Vector3 delta = newWorldScale / position;
+	for (auto& child : children) {
+		child->Move(delta);
+	}
+	scale = newWorldScale;
+}
+
+void Node::Scale(Vector3 multScale) {
+	for (auto& child : children) {
+		child->Scale(multScale);
+	}
+	scale *= multScale;
+}
+
+void Node::Scale(float multScale) {
+	for (auto& child : children) {
+		child->Scale(multScale);
+	}
+	scale *= multScale;
+}
+
+Vector3 Node::GetScale() const { return scale; }

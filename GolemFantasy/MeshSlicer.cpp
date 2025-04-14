@@ -1,3 +1,4 @@
+#pragma once
 #include "raylib.h"
 #include "raymath.h"
 #include <vector>
@@ -202,8 +203,8 @@ std::pair<Mesh, Mesh> SliceMeshByPlane(const Mesh& mesh, Vector3 planePoint, Vec
     // Create meshes from verticies vectors
     auto CreateMeshFromVerts = [](const std::vector<Vector3>& verts) -> Mesh {
         Mesh m = { 0 };
-        m.vertexCount = verts.size();
-        m.triangleCount = verts.size() / 3;
+        m.vertexCount = (int)verts.size();
+        m.triangleCount = (int)verts.size() / 3;
 
         m.vertices = (float*)MemAlloc(sizeof(float) * m.vertexCount * 3);
         m.indices = (unsigned short*)MemAlloc(sizeof(unsigned short) * m.vertexCount);

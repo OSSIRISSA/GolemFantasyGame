@@ -17,23 +17,23 @@ void GolemCharacter::Update(float delta) {
 
 void GolemCharacter::Draw() const {
     // Torso
-    DrawCube(m_position, 1.0f, 2.0f, 1.0f, torsoPart.color);
-    DrawCubeWires(m_position, 1.0f, 2.0f, 1.0f, BLACK);
+    DrawCube(position, 1.0f, 2.0f, 1.0f, torsoPart.color);
+    DrawCubeWires(position, 1.0f, 2.0f, 1.0f, BLACK);
 
     // Head
-    Vector3 headPos = m_position;
+    Vector3 headPos = position;
     headPos.y += 1.5f;
     DrawSphere(headPos, 0.3f, headPart.color);
 
     // Arms
     float armLength = 1.0f;
-    Vector3 leftArmPos = m_position;
+    Vector3 leftArmPos = position;
     leftArmPos.x -= 0.75f;
     leftArmPos.y += 0.5f;
     DrawCube(leftArmPos, 0.3f, armLength, 0.3f, armPart.color);
     DrawCubeWires(leftArmPos, 0.3f, armLength, 0.3f, BLACK);
 
-    Vector3 rightArmPos = m_position;
+    Vector3 rightArmPos = position;
     rightArmPos.x += 0.75f;
     rightArmPos.y += 0.5f;
     DrawCube(rightArmPos, 0.3f, armLength, 0.3f, armPart.color);
@@ -41,13 +41,13 @@ void GolemCharacter::Draw() const {
 
     // Legs
     float legLength = 1.0f;
-    Vector3 leftLegPos = m_position;
+    Vector3 leftLegPos = position;
     leftLegPos.x -= 0.3f;
     leftLegPos.y -= 1.0f;
     DrawCube(leftLegPos, 0.3f, legLength, 0.3f, legPart.color);
     DrawCubeWires(leftLegPos, 0.3f, legLength, 0.3f, BLACK);
 
-    Vector3 rightLegPos = m_position;
+    Vector3 rightLegPos = position;
     rightLegPos.x += 0.3f;
     rightLegPos.y -= 1.0f;
     DrawCube(rightLegPos, 0.3f, legLength, 0.3f, legPart.color);

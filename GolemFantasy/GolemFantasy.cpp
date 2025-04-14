@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "raylib.h"
 #include "PlayerCharacter.h"
+#include "StaticMeshPlane.h"
 #include "GolemCharacter.h"
 #include "raymath.h"
 
@@ -10,8 +11,12 @@ int main() {
 
 	std::shared_ptr<Node> rootNode = std::make_shared<Node>("Root");
 
+	rootNode->AddChild(std::make_shared<StaticMeshPlane>(Vector3Zero(), "Plane", 100, 100));
+
 	std::shared_ptr<PlayerCharacter> player = std::make_shared<PlayerCharacter>(Vector3{ 0.0f, 1.0f, 0.0f });
 	rootNode->AddChild(player);
+
+	player->Move({10,0,-10});
 
 	rootNode->AddChild(std::make_shared<GolemCharacter>(Vector3{ 2.0f, 1.5f, 0.0f }));
 
@@ -21,9 +26,7 @@ int main() {
 	Model bottomModel;*/
 
 	while (!WindowShouldClose()) {
-		float delta = GetFrameTime();
-
-		rootNode->Update(delta);
+		rootNode->Update(GetFrameTime());
 
 		/*if (IsKeyPressed(KEY_E) && !sliced) {
 			Mesh originalMesh = GenMeshCone(2, 5, 10);
@@ -52,8 +55,10 @@ int main() {
 			DrawModel(topModel, posTop, 1.0f, RED);
 			DrawModel(bottomModel, posBottom, 1.0f, BLUE);
 		}*/
-
-		DrawPlane({ 0,0,0 }, { 100,100 }, LIGHTGRAY);
+		//Mesh plane = GenMeshPlane(100,100,1,1);
+		//Model meshModel = LoadModelFromMesh(plane);
+		//DrawModel(meshModel, {0,0,0}, 1.0f, LIGHTGRAY);
+		//DrawPlane({ 0,0,0 }, { 100,100 }, LIGHTGRAY);
 		EndMode3D();
 		// --- Exiting 3D Mode ---
 
